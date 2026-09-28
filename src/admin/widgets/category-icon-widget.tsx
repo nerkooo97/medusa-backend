@@ -32,7 +32,7 @@ const CategoryIconWidget = ({
   // Get exact Icon component if valid
   const IconComponent = useMemo(() => {
     if (!isValid) return null
-    return (Icons as Record<string, React.ComponentType<{ className?: string }>>)[trimmed]
+    return (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[trimmed]
   }, [isValid, trimmed])
 
   const handleSave = async () => {
@@ -166,7 +166,7 @@ const CategoryIconWidget = ({
               >
                 Sačuvaj ikonicu
               </Button>
-              {category.metadata?.icon && (
+              {Boolean(category.metadata?.icon) && (
                 <Button
                   variant="danger"
                   onClick={handleRemove}
