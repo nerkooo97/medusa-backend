@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - medusa_backend_db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d medusa-store"]
       interval: 3s
@@ -42,8 +42,8 @@ services:
       - "9000:9000"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/medusa-store
-      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/medusa-store}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
       - JWT_SECRET=${JWT_SECRET:-supersecret}
       - COOKIE_SECRET=${COOKIE_SECRET:-supersecret}
       - STORE_CORS=${STORE_CORS:-http://localhost:8000,http://localhost:8001}
@@ -60,7 +60,7 @@ services:
       - dokploy-network
 
 volumes:
-  postgres_data:
+  medusa_backend_db_data:
 
 networks:
   medusa_network:
