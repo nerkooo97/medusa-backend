@@ -16,13 +16,14 @@ pnpm exec medusa db:migrate
 echo "Creating default admin user if not exists..."
 pnpm exec medusa user -e admin@test.com -p supersecret || true
 
-echo "Building Medusa production bundle (admin & server)..."
-pnpm exec medusa build
-
-echo "Ensuring admin dashboard build is in public/admin..."
-mkdir -p ./public
-if [ -d ".medusa/server/public" ]; then
-  cp -r .medusa/server/public/* ./public/
+# Check if pre-built bundle exists, otherwise build on demand
+if [ ! -f "./public/admin/index.html" ]; then
+  echo "Admin bundle missing, building..."
+  pnpm exec medusa build
+  mkdir -p ./public
+  if [ -d ".medusa/server/public" ]; then
+    cp -r .medusa/server/public/* ./public/
+  fi
 fi
 
 echo "Starting Medusa server on 0.0.0.0:9000..."

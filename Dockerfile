@@ -5,10 +5,14 @@ RUN corepack enable && corepack prepare pnpm@10.11.1 --activate
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 RUN pnpm install
 
 COPY . .
+
+RUN pnpm exec medusa build && \
+    mkdir -p ./public && \
+    cp -r .medusa/server/public/* ./public/
 
 RUN chmod +x ./start.sh ./seed.sh 2>/dev/null || true
 
