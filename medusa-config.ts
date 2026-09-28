@@ -17,6 +17,10 @@ module.exports = defineConfig({
       ssl: false,
       sslmode: "disable",
     },
+    cookieOptions: {
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: (process.env.COOKIE_SAME_SITE as "lax" | "strict" | "none") || "lax",
+    },
   },
   admin: {
     disable: false,
