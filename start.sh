@@ -19,5 +19,11 @@ pnpm exec medusa user -e admin@test.com -p supersecret || true
 echo "Building Medusa production bundle (admin & server)..."
 pnpm exec medusa build
 
+echo "Ensuring admin dashboard build is in public/admin..."
+mkdir -p ./public
+if [ -d ".medusa/server/public" ]; then
+  cp -r .medusa/server/public/* ./public/
+fi
+
 echo "Starting Medusa server on 0.0.0.0:9000..."
 exec pnpm exec medusa start -H 0.0.0.0 -p 9000
