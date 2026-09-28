@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-export DATABASE_URL="${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/medusa-store}"
-export REDIS_URL="${REDIS_URL:-redis://redis:6379}"
+export DATABASE_URL="${DATABASE_URL:-postgres://medusa_user:medusa_password@medusa-postgres:5432/medusa-store}"
+export REDIS_URL="${REDIS_URL:-redis://medusa-redis:6379}"
 export JWT_SECRET="${JWT_SECRET:-supersecret}"
 export COOKIE_SECRET="${COOKIE_SECRET:-supersecret}"
 export NODE_ENV="development"

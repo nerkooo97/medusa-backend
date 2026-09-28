@@ -1,0 +1,1 @@
+import{cq as e,co as u,s as o}from"./index-ByBoyQ6C.js";var i="product_variant",n=e(i),c=(r,a)=>{const{data:s,...t}=u({queryFn:()=>o.admin.productVariant.list(r),queryKey:n.list(r),...a});return{...s,...t}};export{n as p,c as u};

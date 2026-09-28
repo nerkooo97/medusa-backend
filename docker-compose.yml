@@ -1,31 +1,27 @@
 services:
-  postgres:
+  medusa-postgres:
     image: postgres:15-alpine
-    container_name: medusa_postgres
+    container_name: medusa_backend_postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: medusa-store
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: medusa_user
+      POSTGRES_PASSWORD: medusa_password
       POSTGRES_HOST_AUTH_METHOD: trust
-    ports:
-      - "5432:5432"
     volumes:
-      - medusa_backend_db_data:/var/lib/postgresql/data
+      - medusa_backend_db_data_v3:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d medusa-store"]
+      test: ["CMD-SHELL", "pg_isready -U medusa_user -d medusa-store"]
       interval: 3s
       timeout: 3s
       retries: 10
     networks:
       - medusa_network
 
-  redis:
+  medusa-redis:
     image: redis:7-alpine
-    container_name: medusa_redis
+    container_name: medusa_backend_redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     networks:
       - medusa_network
 
@@ -34,16 +30,16 @@ services:
     container_name: medusa_backend
     restart: unless-stopped
     depends_on:
-      postgres:
+      medusa-postgres:
         condition: service_healthy
-      redis:
+      medusa-redis:
         condition: service_started
     ports:
       - "9000:9000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/medusa-store}
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - DATABASE_URL=${DATABASE_URL:-postgres://medusa_user:medusa_password@medusa-postgres:5432/medusa-store}
+      - REDIS_URL=${REDIS_URL:-redis://medusa-redis:6379}
       - JWT_SECRET=${JWT_SECRET:-supersecret}
       - COOKIE_SECRET=${COOKIE_SECRET:-supersecret}
       - STORE_CORS=${STORE_CORS:-http://localhost:8000,http://localhost:8001}
@@ -57,7 +53,7 @@ services:
       - dokploy-network
 
 volumes:
-  medusa_backend_db_data:
+  medusa_backend_db_data_v3:
 
 networks:
   medusa_network:

@@ -3,8 +3,8 @@ set -e
 
 export NODE_ENV=production
 
-echo "Waiting for PostgreSQL at ${DATABASE_HOST:-postgres}:${DATABASE_PORT:-5432}..."
-until nc -z -w 3 ${DATABASE_HOST:-postgres} ${DATABASE_PORT:-5432}; do
+echo "Waiting for PostgreSQL at ${DATABASE_HOST:-medusa-postgres}:${DATABASE_PORT:-5432}..."
+until nc -z -w 3 ${DATABASE_HOST:-medusa-postgres} ${DATABASE_PORT:-5432}; do
   echo "PostgreSQL is not ready yet - waiting 2 seconds..."
   sleep 2
 done
