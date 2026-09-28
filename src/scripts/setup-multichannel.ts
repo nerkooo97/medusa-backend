@@ -393,5 +393,10 @@ export default async function setupMultichannel({ container }: ExecArgs) {
     logger.info("💾 Updated apps/storefront-beauty/.env with Šminka key")
   }
 
+  console.log("\n==================================================")
+  console.log(`🔑 Alati Storefront Key: ${toolsApiKey.token}`)
+  console.log(`🔑 Šminka Storefront Key: ${beautyApiKey.token}`)
+  console.log("==================================================\n")
+
   logger.info("🎉 Multi-Channel Setup completed successfully!")
 }
