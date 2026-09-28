@@ -20,4 +20,4 @@ RUN chmod +x ./seed.sh 2>/dev/null || true
 
 EXPOSE 9000
 
-CMD ["sh", "-c", "until nc -z -w 2 ${DATABASE_HOST:-medusa-postgres} ${DATABASE_PORT:-5432}; do sleep 1; done && pnpm exec medusa db:migrate && (pnpm exec medusa user -e admin@test.com -p supersecret || true) && exec pnpm exec medusa start -H 0.0.0.0 -p 9000"]
+CMD ["sh", "-c", "until nc -z -w 2 ${DATABASE_HOST:-postgres} ${DATABASE_PORT:-5432}; do sleep 1; done && pnpm exec medusa db:migrate && (pnpm exec medusa user -e ${ADMIN_EMAIL:-admin@test.com} -p ${ADMIN_PASSWORD:-supersecret} || true) && exec pnpm exec medusa start -H 0.0.0.0 -p 9000"]

@@ -1,26 +1,26 @@
 services:
-  medusa-postgres:
+  postgres:
     image: postgres:15-alpine
-    container_name: medusa_backend_postgres
+    container_name: medusa_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: medusa-store
-      POSTGRES_USER: medusa_user
-      POSTGRES_PASSWORD: medusa_password
+      POSTGRES_DB: ${POSTGRES_DB:-medusa-store}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - medusa_backend_db_data_v3:/var/lib/postgresql/data
+      - medusa_backend_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U medusa_user -d medusa-store"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-medusa-store}"]
       interval: 3s
       timeout: 3s
       retries: 10
     networks:
       - medusa_network
 
-  medusa-redis:
+  redis:
     image: redis:7-alpine
-    container_name: medusa_backend_redis
+    container_name: medusa_redis
     restart: unless-stopped
     networks:
       - medusa_network
@@ -30,21 +30,21 @@ services:
     container_name: medusa_backend
     restart: unless-stopped
     depends_on:
-      medusa-postgres:
+      postgres:
         condition: service_healthy
-      medusa-redis:
+      redis:
         condition: service_started
     ports:
       - "9000:9000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL:-postgres://medusa_user:medusa_password@medusa-postgres:5432/medusa-store}
-      - REDIS_URL=${REDIS_URL:-redis://medusa-redis:6379}
-      - JWT_SECRET=${JWT_SECRET:-supersecret}
-      - COOKIE_SECRET=${COOKIE_SECRET:-supersecret}
-      - STORE_CORS=${STORE_CORS:-http://localhost:8000,http://localhost:8001,http://alati.77.42.72.66.nip.io,https://alati.77.42.72.66.nip.io,http://medusajs-ljepota.77.42.72.66.nip.io,https://medusajs-ljepota.77.42.72.66.nip.io}
-      - ADMIN_CORS=${ADMIN_CORS:-http://localhost:9000,http://medusajs-backend.77.42.72.66.nip.io,https://medusajs-backend.77.42.72.66.nip.io}
-      - AUTH_CORS=${AUTH_CORS:-http://localhost:9000,http://medusajs-backend.77.42.72.66.nip.io,https://medusajs-backend.77.42.72.66.nip.io}
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - COOKIE_SECRET=${COOKIE_SECRET}
+      - STORE_CORS=${STORE_CORS}
+      - ADMIN_CORS=${ADMIN_CORS}
+      - AUTH_CORS=${AUTH_CORS}
     env_file:
       - path: .env
         required: false
@@ -53,7 +53,7 @@ services:
       - dokploy-network
 
 volumes:
-  medusa_backend_db_data_v3:
+  medusa_backend_db_data:
 
 networks:
   medusa_network:
