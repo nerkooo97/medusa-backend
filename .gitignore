@@ -16,6 +16,8 @@ medusa-db.sql
 build
 .cache
 
+.medusa
+/public/admin
 .yarn/*
 !.yarn/patches
 !.yarn/plugins

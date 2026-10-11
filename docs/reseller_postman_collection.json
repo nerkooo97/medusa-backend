@@ -1,0 +1,294 @@
+{
+  "info": {
+    "_postman_id": "b1a2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+    "name": "Medusa v2 - Reseller API (Preprodavači)",
+    "description": "Zvanična Postman kolekcija za integraciju vanjskih aplikacija za preprodavače sa Medusa.js v2 backendom.\n\nSadrži:\n1. Reseller API (za mobilne / web aplikacije preprodavača) sa autentifikacijom preko 'x-reseller-api-key'\n2. Admin Reseller API (za upravljanje agentima i isplatama)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:9000",
+      "type": "string"
+    },
+    {
+      "key": "reseller_api_key",
+      "value": "res_key_VASS_API_KLJUC",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "VAŠ_ADMIN_JWT_TOKEN",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Reseller API (Vanjska Aplikacija)",
+      "description": "Rute koje poziva mobilna ili web aplikacija preprodavača. Sve rute zahtijevaju zaglavlje 'x-reseller-api-key'.",
+      "item": [
+        {
+          "name": "Katalog Proizvoda sa Popustom / Provizijom",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-reseller-api-key",
+                "value": "{{reseller_api_key}}",
+                "type": "text",
+                "description": "Jedinstveni API ključ preprodavača"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reseller-api/products",
+              "host": ["{{base_url}}"],
+              "path": ["reseller-api", "products"]
+            },
+            "description": "Dohvaća sve dostupne artikle. Za svaku varijantu automatski izračunava: maloprodajnu cijenu (retail_price), nabavnu cijenu preprodavača (reseller_cost) i profitnu maržu (profit_margin)."
+          },
+          "response": []
+        },
+        {
+          "name": "Kreiraj Narudžbu za Krajnjeg Kupca",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-reseller-api-key",
+                "value": "{{reseller_api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer\": {\n    \"first_name\": \"Edin\",\n    \"last_name\": \"Džeko\",\n    \"phone\": \"+38761123456\",\n    \"address\": \"Zmaja od Bosne 10\",\n    \"city\": \"Sarajevo\",\n    \"postal_code\": \"71000\"\n  },\n  \"items\": [\n    {\n      \"variant_id\": \"variant_01JXXXXXX\",\n      \"quantity\": 1\n    }\n  ],\n  \"note\": \"Molimo nazvati kupca prije isporuke na vrata.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reseller-api/orders",
+              "host": ["{{base_url}}"],
+              "path": ["reseller-api", "orders"]
+            },
+            "description": "Preprodavač šalje podatke kupca i željene artikle. Medusa automatski provjerava/kreira standardnog Kupca u Customer modulu (/app/customers), kreira standardnu Medusa Narudžbu u Order modulu (/app/orders) sa adresom i artiklima, te kreira vezu u Reseller modulu za obračun marže i provizije."
+          },
+          "response": []
+        },
+        {
+          "name": "Moje Narudžbe (Praćenje Statusa)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-reseller-api-key",
+                "value": "{{reseller_api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reseller-api/my-orders",
+              "host": ["{{base_url}}"],
+              "path": ["reseller-api", "my-orders"]
+            },
+            "description": "Vraća listu svih narudžbi koje je preprodavač plasirao, sa statusom paketa (pending, shipped, delivered, returned, canceled) i statusom provizije."
+          },
+          "response": []
+        },
+        {
+          "name": "Moj Novčanik & Stanje Provizija",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-reseller-api-key",
+                "value": "{{reseller_api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reseller-api/my-wallet",
+              "host": ["{{base_url}}"],
+              "path": ["reseller-api", "my-wallet"]
+            },
+            "description": "Vraća finansijsko stanje novčanika preprodavača: ukupan ostvareni promet, ukupno zarađenu proviziju, iznos spreman za isplatu (eligible_for_payout) i do sada isplaćeni iznos."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Admin API (Upravljanje Preprodavačima)",
+      "description": "Rute koje koristi Medusa Admin panel za kreiranje agenata, isplate i administraciju.",
+      "item": [
+        {
+          "name": "Lista Svih Preprodavača",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/resellers",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "resellers"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Kreiraj Novog Preprodavača",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ahmed Hadžić\",\n  \"contact_person\": \"Ahmed\",\n  \"email\": \"ahmed.reseller@gmail.com\",\n  \"phone\": \"+38761999888\",\n  \"commission_type\": \"percentage\",\n  \"commission_rate\": 15,\n  \"payout_info\": {\n    \"bank_name\": \"UniCredit Bank d.d.\",\n    \"account_number\": \"3381001122334455\",\n    \"recipient_name\": \"Ahmed Hadžić\",\n    \"iban\": \"BA393381001122334455\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/resellers",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "resellers"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Dohvati Detalje Preprodavača (sa narudžbama i isplatama)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/resellers/:id",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "resellers", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "res_01XXXXXX"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Regeneriši API Ključ Preprodavača",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/resellers/:id/regenerate-key",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "resellers", ":id", "regenerate-key"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "res_01XXXXXX"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Evidentiraj Isplatu Provizije",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 65.0,\n  \"payment_method\": \"bank_transfer\",\n  \"reference_number\": \"UPL-2026-10-001\",\n  \"notes\": \"Isplaćeno preko UniCredit e-bankinga\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/resellers/:id/payouts",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "resellers", ":id", "payouts"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "res_01XXXXXX"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ažuriraj Status Narudžbe Preprodavača",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_status\": \"delivered\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/resellers/orders/:id",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "resellers", "orders", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ro_01XXXXXX"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

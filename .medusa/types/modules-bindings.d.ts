@@ -24,6 +24,9 @@ import type { IEventBusModuleService } from '@medusajs/framework/types'
 import type { IWorkflowEngineService } from '@medusajs/framework/types'
 import type { ILockingModule } from '@medusajs/framework/types'
 import type { IFileModuleService } from '@medusajs/framework/types'
+import type WarehouseModuleService from '../../src/modules/warehouse'
+import type MarketplaceModuleService from '../../src/modules/marketplace'
+import type ResellerModuleService from '../../src/modules/reseller'
 
 declare module '@medusajs/framework/types' {
   interface ModuleImplementations {
@@ -52,6 +55,9 @@ declare module '@medusajs/framework/types' {
     'event_bus': IEventBusModuleService,
     'workflows': IWorkflowEngineService,
     'locking': ILockingModule,
-    'file': IFileModuleService
+    'file': IFileModuleService,
+    'warehouseModuleService': InstanceType<(typeof WarehouseModuleService)['service']>,
+    'marketplaceModuleService': InstanceType<(typeof MarketplaceModuleService)['service']>,
+    'resellerModuleService': InstanceType<(typeof ResellerModuleService)['service']>
   }
 }

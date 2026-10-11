@@ -12,6 +12,8 @@ RUN pnpm install
 
 COPY . .
 
+RUN pnpm exec medusa build
+
 # Ensure admin dashboard files are in public/admin inside image
 RUN mkdir -p ./public && \
     if [ -d ".medusa/server/public" ]; then cp -r .medusa/server/public/* ./public/; fi

@@ -25,4 +25,15 @@ module.exports = defineConfig({
   admin: {
     disable: false,
   },
+  modules: [
+    {
+      resolve: "./src/modules/warehouse",
+    },
+    {
+      resolve: "./src/modules/marketplace",
+    },
+    {
+      resolve: "./src/modules/reseller",
+    },
+  ],
 })
