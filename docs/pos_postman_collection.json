@@ -1,0 +1,445 @@
+{
+  "info": {
+    "_postman_id": "c2d3e4f5-a6b7-8c9d-0e1f-2a3b4c5d6e7f",
+    "name": "Medusa v2 - POS API (Registar Kase & Terminali)",
+    "description": "Zvanična Postman kolekcija za integraciju POS (Point of Sale) modula u Medusa.js v2.\n\nSadrži:\n1. Expo POS Terminal API (za Expo React Native tablet/mobilnu aplikaciju na prodajnom mjestu)\n2. Admin POS Kase (upravljanje kasama, poslovnim jedinicama, prodajnim kanalima, skladištima i BiH fiskalnim printerima)\n3. Kasiri & Operateri (dodjeljivanje registrovanih korisnika i PIN kodova)\n4. Smjene Kase (otvaranje i zatvaranje smjene, početni polog / depozit i rekapitulacija)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:9000",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "VAŠ_ADMIN_JWT_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "pos_register_id",
+      "value": "01M4R3BSMFJNMNPGYD7XMK6Q09",
+      "type": "string"
+    },
+    {
+      "key": "pos_device_key",
+      "value": "pos_dev_8c1ced6f51b12dec73181306f8da123a",
+      "type": "string"
+    },
+    {
+      "key": "operator_id",
+      "value": "op_test_id",
+      "type": "string"
+    },
+    {
+      "key": "session_id",
+      "value": "sess_test_id",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "usr_01M4R3AF...",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Expo POS Terminal (Mobilna / Tablet Aplikacija)",
+      "description": "API pozivi koje izvršava Expo aplikacija na samoj POS kasi.",
+      "item": [
+        {
+          "name": "Konfiguracija Kase za Expo Aplikaciju",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "x-pos-device-key",
+                "value": "{{pos_device_key}}",
+                "type": "text",
+                "description": "Sigurnosni ključ kase za verifikaciju uređaja"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pos/terminal/{{pos_register_id}}/config",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "terminal", "{{pos_register_id}}", "config"]
+            },
+            "description": "Poziva se pri startovanju Expo aplikacije. Vraća:\n- Podatke o poslovnoj jedinici (naziv, adresa, grad, JIB, PDV, telefon)\n- Povezani prodajni kanal (katalog artikala i cijena)\n- Povezani magacin / skladište (odakle se skida stanje)\n- Dozvoljene načine plaćanja (gotovina, kartica, virman)\n- Postavke za fiskalni printer (tip: Tring/HCP/Tremol, IP, port, IBFM, zaglavlje i podnožje)\n- Listu ovlaštenih kasira (ime, email, rola, has_pin)\n- Status trenutne smjene (otvorena/zatvorena, početni polog)"
+          },
+          "response": []
+        },
+        {
+          "name": "Prijava Kasira na Terminalu (PIN Login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"pin_code\": \"1234\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/pos/terminal/{{pos_register_id}}/auth",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "terminal", "{{pos_register_id}}", "auth"]
+            },
+            "description": "Brza autorizacija kasira na touch-screen ekranu preko 4-cifrenog PIN-a. Vraća potvrdu i trenutni status smjene."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Admin POS Kase (Upravljanje)",
+      "description": "Administrativno upravljanje kasama, prodajnim kanalima i skladištima.",
+      "item": [
+        {
+          "name": "Dohvati Opcije za Kreiranje Kase (Kanali, Skladišta, Korisnici)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pos/options",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "options"]
+            },
+            "description": "Vraća listu postojećih prodajnih kanala, skladišta, registrovanih korisnika, standardnih metoda plaćanja i podržanih fiskalnih uređaja za popunjavanje dropdown menija u formi."
+          },
+          "response": []
+        },
+        {
+          "name": "Lista Svih POS Kasa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pos/registers?limit=50&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "registers"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Dohvaća sve registrovane POS kase obogaćene sa nazivima prodajnih kanala, skladišta, brojem operatera i statusom otvorene smjene."
+          },
+          "response": []
+        },
+        {
+          "name": "Kreiraj Novu POS Kasu",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Glavna Kasa Sarajevo 1\",\n  \"code\": \"POS-001\",\n  \"description\": \"POS terminal za maloprodajni objekat Alati Centar\",\n  \"status\": \"active\",\n  \"store_name\": \"Piko Alati - PJ Sarajevo 1\",\n  \"store_address\": \"Džemala Bijedića 160\",\n  \"store_city\": \"Sarajevo\",\n  \"store_postal_code\": \"71000\",\n  \"store_country_code\": \"ba\",\n  \"store_phone\": \"+387 33 123 456\",\n  \"store_email\": \"pos.sarajevo1@pikoalati.ba\",\n  \"tax_id\": \"4201234560001\",\n  \"vat_id\": \"201234560001\",\n  \"sales_channel_id\": \"sc_01M4R3AF7MMJ12A8BEJ9SV0VGA\",\n  \"stock_location_id\": \"sloc_01M4R3AFCEJF4BH2D800A00C2N\",\n  \"supported_payment_methods\": [\"cash\", \"card\", \"wire_transfer\"],\n  \"default_payment_method\": \"cash\",\n  \"fiscal_printer_type\": \"tring\",\n  \"fiscal_printer_ip\": \"192.168.1.150\",\n  \"fiscal_printer_port\": 8080,\n  \"fiscal_device_serial\": \"TRING-IBFM-0042\",\n  \"receipt_header\": \"PIKO ALATI d.o.o.\\nPJ Sarajevo 1\\nDžemala Bijedića 160\",\n  \"receipt_footer\": \"Hvala na posjeti!\\nKupujte sigurno - Piko Alati\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/pos/registers",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "registers"]
+            },
+            "description": "Kreira novu POS kasu i poslovnu jedinicu, povezuje kanal prodaje i skladište, te generiše device_key za autorizaciju tableta."
+          },
+          "response": []
+        },
+        {
+          "name": "Detalji POS Kase",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pos/registers/{{pos_register_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "registers", "{{pos_register_id}}"]
+            },
+            "description": "Dohvaća detalje određene kase sa spojenim podacima o kanalima, skladištima, dodijeljenim operaterima i aktivnoj smjeni."
+          },
+          "response": []
+        },
+        {
+          "name": "Ažuriraj POS Kasu",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Glavna Kasa Sarajevo 1 (Pult A)\",\n  \"store_phone\": \"+387 33 999 888\",\n  \"fiscal_printer_ip\": \"192.168.1.155\",\n  \"supported_payment_methods\": [\"cash\", \"card\", \"wire_transfer\", \"voucher\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/pos/registers/{{pos_register_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "registers", "{{pos_register_id}}"]
+            },
+            "description": "Ažurira podatke o kasi, poslovnoj jedinici, fiskalnom printeru ili dozvoljenim načinima plaćanja."
+          },
+          "response": []
+        },
+        {
+          "name": "Obriši POS Kasu",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pos/registers/{{pos_register_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "registers", "{{pos_register_id}}"]
+            },
+            "description": "Briše odabranu kasu iz sistema."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Kasiri & Operateri Kase",
+      "description": "Upravljanje ovlaštenim korisnicima i PIN kodovima po kasi.",
+      "item": [
+        {
+          "name": "Dodijeli Korisnika (Kasira) na Kasu",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"role\": \"cashier\",\n  \"pin_code\": \"1234\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/pos/registers/{{pos_register_id}}/operators",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "registers", "{{pos_register_id}}", "operators"]
+            },
+            "description": "Povezuje registrovanog Medusa korisnika sa kasom, postavlja njegovu ulogu ('cashier', 'supervisor', 'admin') i opcioni 4-cifreni PIN kod za touch prijavu."
+          },
+          "response": []
+        },
+        {
+          "name": "Ažuriraj Operatera (Promjena PIN-a ili Uloge)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"supervisor\",\n  \"pin_code\": \"9988\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/pos/registers/{{pos_register_id}}/operators/{{operator_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "registers", "{{pos_register_id}}", "operators", "{{operator_id}}"]
+            },
+            "description": "Mijenja PIN kod ili nivo pristupa kasira na toj kasi."
+          },
+          "response": []
+        },
+        {
+          "name": "Ukloni Operatera sa Kase",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pos/registers/{{pos_register_id}}/operators/{{operator_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "registers", "{{pos_register_id}}", "operators", "{{operator_id}}"]
+            },
+            "description": "Uklanja pravo pristupa korisnika za rad na toj kasi."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Smjene Kase (Sesije, Polog & Dnevni Obračun)",
+      "description": "Praćenje otvaranja kase, početnog pologa i zatvaranja smjene (X/Z izvještaj).",
+      "item": [
+        {
+          "name": "Pregled Smjena Kase",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/pos/registers/{{pos_register_id}}/sessions?limit=20&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "registers", "{{pos_register_id}}", "sessions"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Prikazuje listu prethodnih smjena, vrijeme otvaranja i zatvaranja, te iznose gotovine."
+          },
+          "response": []
+        },
+        {
+          "name": "Otvori Smjenu (Početni Polog / Depozit)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"open\",\n  \"user_id\": \"{{user_id}}\",\n  \"opening_cash\": 200,\n  \"notes\": \"Jutarnja smjena - polog 200 KM\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/pos/registers/{{pos_register_id}}/sessions",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "registers", "{{pos_register_id}}", "sessions"]
+            },
+            "description": "Otvara novu smjenu na kasi i evidentira početni iznos gotovine u ladici (polog)."
+          },
+          "response": []
+        },
+        {
+          "name": "Zatvori Smjenu (Krajnji Iznos Gotovine)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"close\",\n  \"session_id\": \"{{session_id}}\",\n  \"user_id\": \"{{user_id}}\",\n  \"closing_cash\": 850,\n  \"notes\": \"Završena smjena - zatečeno 850 KM u kasi\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/pos/registers/{{pos_register_id}}/sessions",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "pos", "registers", "{{pos_register_id}}", "sessions"]
+            },
+            "description": "Zatvara otvorenu smjenu, bilježi završno stanje gotovine i priprema podatke za dnevni zaključak."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

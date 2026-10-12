@@ -35,5 +35,8 @@ module.exports = defineConfig({
     {
       resolve: "./src/modules/reseller",
     },
+    {
+      resolve: "./src/modules/pos",
+    },
   ],
 })
