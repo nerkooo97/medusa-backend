@@ -27,6 +27,7 @@ import type { IFileModuleService } from '@medusajs/framework/types'
 import type WarehouseModuleService from '../../src/modules/warehouse'
 import type MarketplaceModuleService from '../../src/modules/marketplace'
 import type ResellerModuleService from '../../src/modules/reseller'
+import type PosModuleService from '../../src/modules/pos'
 
 declare module '@medusajs/framework/types' {
   interface ModuleImplementations {
@@ -58,6 +59,7 @@ declare module '@medusajs/framework/types' {
     'file': IFileModuleService,
     'warehouseModuleService': InstanceType<(typeof WarehouseModuleService)['service']>,
     'marketplaceModuleService': InstanceType<(typeof MarketplaceModuleService)['service']>,
-    'resellerModuleService': InstanceType<(typeof ResellerModuleService)['service']>
+    'resellerModuleService': InstanceType<(typeof ResellerModuleService)['service']>,
+    'posModuleService': InstanceType<(typeof PosModuleService)['service']>
   }
 }

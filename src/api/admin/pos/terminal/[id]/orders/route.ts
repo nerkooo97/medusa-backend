@@ -78,8 +78,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       let title = item.title || item.name || "POS Artikal"
       const quantity = Math.max(1, Number(item.quantity) || 1)
 
-      // Ako je proslijeđen samo product_id ili nevalidan variant_id, dohvati prvu varijantu proizvoda
-      if (!variantId && item.product_id) {
+      // Ako je proslijeđen samo product_id ili variant_id zapravo počinje sa prod_, dohvati prvu varijantu proizvoda
+      const targetProdId = item.product_id || (variantId && variantId.startsWith("prod_") ? variantId : null)
+      if ((!variantId || variantId.startsWith("prod_")) && targetProdId) {
         try {
           const { data: prods } = await query.graph({
             entity: "product",
@@ -91,7 +92,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
               "variants.prices.amount",
               "variants.prices.currency_code",
             ],
-            filters: { id: item.product_id },
+            filters: { id: targetProdId },
           })
           const prod: any = prods?.[0]
           const firstVar = prod?.variants?.[0]
