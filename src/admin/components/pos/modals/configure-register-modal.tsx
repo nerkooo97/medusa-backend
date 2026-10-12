@@ -74,7 +74,7 @@ export const ConfigureRegisterModal = ({
 
   // Operator add form
   const [selectedUserId, setSelectedUserId] = useState("")
-  const [operatorRole, setOperatorRole] = useState<"cashier" | "supervisor" | "manager">("cashier")
+  const [operatorRole, setOperatorRole] = useState<"cashier" | "supervisor" | "admin" | "manager">("cashier")
   const [operatorPin, setOperatorPin] = useState("")
   const [addingOperator, setAddingOperator] = useState(false)
 
@@ -728,7 +728,7 @@ export const ConfigureRegisterModal = ({
                       <Select.Content>
                         <Select.Item value="cashier">Kasir (Prodaja)</Select.Item>
                         <Select.Item value="supervisor">Poslovođa</Select.Item>
-                        <Select.Item value="manager">Administrator Kase</Select.Item>
+                        <Select.Item value="admin">Administrator Kase</Select.Item>
                       </Select.Content>
                     </Select>
                   </div>
@@ -786,7 +786,7 @@ export const ConfigureRegisterModal = ({
 
                         <div className="flex items-center gap-3">
                           <Badge color="blue" size="small">
-                            {op.role === "manager" ? "Upravitelj" : op.role === "supervisor" ? "Poslovođa" : "Kasir"}
+                            {op.role === "admin" || (op.role as any) === "manager" ? "Administrator" : op.role === "supervisor" ? "Poslovođa" : "Kasir"}
                           </Badge>
                           <Badge color={op.pin_code ? "green" : "grey"} size="small">
                             {op.pin_code ? "PIN postavljen" : "Bez PIN-a"}

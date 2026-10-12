@@ -1,7 +1,7 @@
 export interface PosOperator {
   id: string
   user_id: string
-  role: "cashier" | "supervisor" | "manager"
+  role: "cashier" | "supervisor" | "admin" | "manager"
   pin_code?: string | null
   is_active: boolean
   user?: {

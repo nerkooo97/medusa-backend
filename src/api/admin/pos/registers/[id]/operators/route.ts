@@ -30,10 +30,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       return res.status(400).json({ message: "Ovaj korisnik je već dodijeljen ovoj kasi." })
     }
 
+    const safeRole = role === "manager" ? "admin" : (role || "cashier")
+
     const createdOperator = await posService.createPosRegisterOperators({
       register_id: registerId,
       user_id,
-      role: role || "cashier",
+      role: safeRole,
       pin_code: pin_code || null,
       is_active: is_active !== undefined ? Boolean(is_active) : true,
     })
