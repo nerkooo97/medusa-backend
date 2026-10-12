@@ -4,6 +4,7 @@ import ResellerModuleService from "../../../modules/reseller/service"
 import { createResellerWorkflow } from "../../../workflows/reseller/create-reseller"
 
 import { Modules } from "@medusajs/framework/utils"
+import { syncResellerOrdersWithMedusa } from "../../../utils/reseller-order-sync"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const resellerService: ResellerModuleService = req.scope.resolve(RESELLER_MODULE)
@@ -28,6 +29,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       const [orders] = await resellerService.listAndCountResellerOrders({
         reseller_id: r.id,
       })
+
+      await syncResellerOrdersWithMedusa(orders, req.scope)
 
       const totalRetail = orders.reduce(
         (sum, o) => sum + (Number(o.retail_total) || 0),

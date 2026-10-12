@@ -2,6 +2,8 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { RESELLER_MODULE } from "../../../../modules/reseller"
 import ResellerModuleService from "../../../../modules/reseller/service"
 
+import { syncResellerOrdersWithMedusa } from "../../../../utils/reseller-order-sync"
+
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const resellerService: ResellerModuleService = req.scope.resolve(RESELLER_MODULE)
 
@@ -21,6 +23,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       skip: Number(offset),
     }
   )
+
+  await syncResellerOrdersWithMedusa(orders, req.scope)
 
   res.json({
     orders,

@@ -1,6 +1,7 @@
 import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 import { RESELLER_MODULE } from "../modules/reseller"
 import ResellerModuleService from "../modules/reseller/service"
+import { syncResellerOrdersWithMedusa } from "../utils/reseller-order-sync"
 
 export default async function resellerOrderFulfillmentSyncHandler({
   event: { name, data },
@@ -20,49 +21,10 @@ export default async function resellerOrderFulfillmentSyncHandler({
 
     if (orders.length === 0) return
 
-    const resellerOrder = orders[0]
-
-    if (
-      name === "order.fulfillment_delivered" ||
-      name === "fulfillment.delivered" ||
-      name === "order.completed"
-    ) {
-      await resellerService.updateResellerOrders({
-        id: resellerOrder.id,
-        order_status: "delivered",
-        payout_status: resellerOrder.payout_status === "paid" ? "paid" : "eligible",
-      })
-      logger.info(
-        `[Reseller] Narudžba ${order_id} (Preprodavač) označena kao 'delivered' (provizija spremna za isplatu).`
-      )
-    } else if (
-      name === "order.fulfillment_created" ||
-      name === "fulfillment.created" ||
-      name === "fulfillment.shipment_created"
-    ) {
-      if (resellerOrder.order_status !== "delivered") {
-        await resellerService.updateResellerOrders({
-          id: resellerOrder.id,
-          order_status: "shipped",
-        })
-        logger.info(
-          `[Reseller] Narudžba ${order_id} (Preprodavač) označena kao 'shipped'.`
-        )
-      }
-    } else if (
-      name === "order.fulfillment_canceled" ||
-      name === "fulfillment.canceled" ||
-      name === "order.canceled"
-    ) {
-      await resellerService.updateResellerOrders({
-        id: resellerOrder.id,
-        order_status: "canceled",
-        payout_status: resellerOrder.payout_status === "paid" ? "paid" : "unearned",
-      })
-      logger.info(
-        `[Reseller] Narudžba ${order_id} stornirana. Status postavljen na 'canceled'.`
-      )
-    }
+    await syncResellerOrdersWithMedusa(orders, container)
+    logger.info(
+      `[Reseller Sync] Narudžba ${order_id} sinhronizovana sa Medusa eventom '${name}'.`
+    )
   } catch (err: any) {
     logger.error(
       `[Reseller] Greška u resellerOrderFulfillmentSyncHandler: ${err.message}`,
@@ -73,6 +35,8 @@ export default async function resellerOrderFulfillmentSyncHandler({
 
 export const config: SubscriberConfig = {
   event: [
+    "order.placed",
+    "order.updated",
     "order.fulfillment_created",
     "order.fulfillment_delivered",
     "order.fulfillment_canceled",

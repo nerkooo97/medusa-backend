@@ -3,6 +3,7 @@ import { RESELLER_MODULE } from "../../../../modules/reseller"
 import ResellerModuleService from "../../../../modules/reseller/service"
 
 import { Modules } from "@medusajs/framework/utils"
+import { syncResellerOrdersWithMedusa } from "../../../../utils/reseller-order-sync"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const resellerService: ResellerModuleService = req.scope.resolve(RESELLER_MODULE)
@@ -28,6 +29,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     { reseller_id: id },
     { order: { created_at: "DESC" } }
   )
+
+  await syncResellerOrdersWithMedusa(allOrders, req.scope)
 
   const [payouts] = await resellerService.listAndCountResellerPayouts(
     { reseller_id: id },
