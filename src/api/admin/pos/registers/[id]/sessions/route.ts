@@ -2,15 +2,30 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { POS_MODULE } from "../../../../../../modules/pos"
 import PosModuleService from "../../../../../../modules/pos/service"
 
+export const AUTHENTICATE = false
+
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const posService: PosModuleService = req.scope.resolve(POS_MODULE)
-  const registerId = req.params.id
+  const registerParam = req.params.id
+
+  let targetRegisterId = registerParam
+  try {
+    const reg = await posService.retrievePosRegister(registerParam)
+    targetRegisterId = reg.id
+  } catch (err) {
+    try {
+      const [byCode] = await posService.listAndCountPosRegisters({ code: registerParam }, { take: 1 })
+      if (byCode && byCode.length > 0) {
+        targetRegisterId = byCode[0].id
+      }
+    } catch {}
+  }
 
   const limit = req.query.limit ? parseInt(req.query.limit as string) : 20
   const offset = req.query.offset ? parseInt(req.query.offset as string) : 0
 
   const [sessions, count] = await posService.listAndCountPosRegisterSessions(
-    { register_id: registerId },
+    { register_id: targetRegisterId },
     {
       skip: offset,
       take: limit,
@@ -28,8 +43,21 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const posService: PosModuleService = req.scope.resolve(POS_MODULE)
-  const registerId = req.params.id
+  const registerParam = req.params.id
   const { action, opening_cash, closing_cash, user_id, notes, session_id } = req.body as any
+
+  let targetRegisterId = registerParam
+  try {
+    const reg = await posService.retrievePosRegister(registerParam)
+    targetRegisterId = reg.id
+  } catch (err) {
+    try {
+      const [byCode] = await posService.listAndCountPosRegisters({ code: registerParam }, { take: 1 })
+      if (byCode && byCode.length > 0) {
+        targetRegisterId = byCode[0].id
+      }
+    } catch {}
+  }
 
   try {
     if (action === "open") {
@@ -38,7 +66,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       }
 
       const session = await posService.openSession({
-        register_id: registerId,
+        register_id: targetRegisterId,
         opened_by_user_id: user_id,
         opening_cash: opening_cash !== undefined ? Number(opening_cash) : 0,
         notes,

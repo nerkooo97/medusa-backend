@@ -3,6 +3,8 @@ import { POS_MODULE } from "../../../../../../modules/pos"
 import PosModuleService from "../../../../../../modules/pos/service"
 import { Modules } from "@medusajs/framework/utils"
 
+export const AUTHENTICATE = false
+
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const posService: PosModuleService = req.scope.resolve(POS_MODULE)
   const salesChannelService: any = req.scope.resolve(Modules.SALES_CHANNEL)
@@ -17,13 +19,38 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       relations: ["operators", "sessions"],
     })
   } catch (err: any) {
-    return res.status(404).json({ message: "POS kasa nije pronađena." })
+    // Ako nije pronađena po internom ID-u, tražimo po šifri kase (code)
+    try {
+      const [byCode] = await posService.listAndCountPosRegisters(
+        { code: id },
+        { relations: ["operators", "sessions"], take: 1 }
+      )
+      if (byCode && byCode.length > 0) {
+        register = byCode[0]
+      } else {
+        // Podrška za format POS-01 -> POS-001
+        const normalized = id.replace(/POS-0*(\d+)/i, (_m, num) => `POS-${num.padStart(3, "0")}`)
+        const [byNorm] = await posService.listAndCountPosRegisters(
+          { code: normalized },
+          { relations: ["operators", "sessions"], take: 1 }
+        )
+        if (byNorm && byNorm.length > 0) {
+          register = byNorm[0]
+        }
+      }
+    } catch (searchErr) {
+      console.warn("Greška pri pretrazi kase po kodu:", searchErr)
+    }
+  }
+
+  if (!register) {
+    return res.status(404).json({ message: `POS kasa '${id}' nije pronađena. Provjerite ID ili šifru kase.` })
   }
 
   // Opcionalna provjera device ključa ako je poslan u headeru
   const authDeviceKey = req.headers["x-pos-device-key"] as string | undefined
-  if (authDeviceKey && authDeviceKey !== register.device_key) {
-    return res.status(401).json({ message: "Neispravan sigurnosni ključ kase (x-pos-device-key)." })
+  if (register.device_key && authDeviceKey && authDeviceKey !== register.device_key) {
+    return res.status(401).json({ message: "Neispravan sigurnosni Device Key kase." })
   }
 
   let salesChannel: any = null
