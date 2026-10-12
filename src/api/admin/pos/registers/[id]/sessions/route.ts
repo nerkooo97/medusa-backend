@@ -17,6 +17,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       const [byCode] = await posService.listAndCountPosRegisters({ code: registerParam }, { take: 1 })
       if (byCode && byCode.length > 0) {
         targetRegisterId = byCode[0].id
+      } else {
+        const [byDev] = await posService.listAndCountPosRegisters({ device_key: registerParam }, { take: 1 })
+        if (byDev && byDev.length > 0) {
+          targetRegisterId = byDev[0].id
+        }
       }
     } catch {}
   }
@@ -55,9 +60,23 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       const [byCode] = await posService.listAndCountPosRegisters({ code: registerParam }, { take: 1 })
       if (byCode && byCode.length > 0) {
         targetRegisterId = byCode[0].id
+      } else {
+        const [byDev] = await posService.listAndCountPosRegisters({ device_key: registerParam }, { take: 1 })
+        if (byDev && byDev.length > 0) {
+          targetRegisterId = byDev[0].id
+        }
       }
     } catch {}
   }
+
+  // Obavezna provjera: Šifra kase i Device Key se moraju poklopiti
+  const authDeviceKey = (req.headers["x-pos-device-key"] as string | undefined)?.trim()
+  try {
+    const reg = await posService.retrievePosRegister(targetRegisterId)
+    if (reg?.device_key && (!authDeviceKey || authDeviceKey !== reg.device_key)) {
+      return res.status(401).json({ message: "Neispravan ili nedostaje sigurnosni Device Key kase." })
+    }
+  } catch {}
 
   try {
     if (action === "open") {

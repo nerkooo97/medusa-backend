@@ -36,10 +36,19 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         )
         if (byNorm && byNorm.length > 0) {
           register = byNorm[0]
+        } else {
+          // Podrška za pretragu po Device Key
+          const [byDev] = await posService.listAndCountPosRegisters(
+            { device_key: id },
+            { relations: ["operators", "sessions"], take: 1 }
+          )
+          if (byDev && byDev.length > 0) {
+            register = byDev[0]
+          }
         }
       }
     } catch (searchErr) {
-      console.warn("Greška pri pretrazi kase po kodu:", searchErr)
+      console.warn("Greška pri pretrazi kase po kodu ili ključu:", searchErr)
     }
   }
 
@@ -47,10 +56,27 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     return res.status(404).json({ message: `POS kasa '${id}' nije pronađena. Provjerite ID ili šifru kase.` })
   }
 
-  // Opcionalna provjera device ključa ako je poslan u headeru
-  const authDeviceKey = req.headers["x-pos-device-key"] as string | undefined
-  if (register.device_key && authDeviceKey && authDeviceKey !== register.device_key) {
-    return res.status(401).json({ message: "Neispravan sigurnosni Device Key kase." })
+  // Obavezna provjera: Šifra kase i Device Key se moraju poklopiti
+  const authDeviceKey = (req.headers["x-pos-device-key"] as string | undefined)?.trim()
+  if (!authDeviceKey) {
+    return res.status(401).json({
+      message: "Neautorizovan pristup: Za povezivanje kase obavezan je sigurnosni Device Key.",
+    })
+  }
+
+  if (register.device_key && authDeviceKey !== register.device_key) {
+    return res.status(401).json({
+      message: "Neispravan Device Key: Sigurnosni ključ kase se ne poklapa sa ovom šifrom kase.",
+    })
+  }
+
+  if (!register.device_key) {
+    try {
+      await posService.updatePosRegisters([{ id: register.id, device_key: authDeviceKey }])
+      register.device_key = authDeviceKey
+    } catch (saveErr) {
+      console.warn("Greška pri uparivanju ključa sa kasom:", saveErr)
+    }
   }
 
   let salesChannel: any = null

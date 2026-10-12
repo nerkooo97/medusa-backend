@@ -30,12 +30,29 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         const [byNorm] = await posService.listAndCountPosRegisters({ code: normalized }, { take: 1 })
         if (byNorm && byNorm.length > 0) {
           targetRegisterId = byNorm[0].id
+        } else {
+          const [byDev] = await posService.listAndCountPosRegisters({ device_key: registerParam }, { take: 1 })
+          if (byDev && byDev.length > 0) {
+            targetRegisterId = byDev[0].id
+          }
         }
       }
     } catch (searchErr) {
       console.warn("Greška pri traženju kase:", searchErr)
     }
   }
+
+  // Obavezna provjera Device Key-a
+  const authDeviceKey = (req.headers["x-pos-device-key"] as string | undefined)?.trim()
+  try {
+    const register = await posService.retrievePosRegister(targetRegisterId)
+    if (register?.device_key && (!authDeviceKey || authDeviceKey !== register.device_key)) {
+      return res.status(401).json({
+        success: false,
+        message: "Neispravan ili nedostaje sigurnosni Device Key kase.",
+      })
+    }
+  } catch {}
 
   try {
     const validation = await posService.validateOperator(targetRegisterId, user_id, pin_code)
