@@ -22,10 +22,21 @@ export async function syncResellerOrdersWithMedusa(
         "status",
         "fulfillment_status",
         "payment_status",
+        "items.id",
+        "items.title",
+        "items.quantity",
+        "items.unit_price",
+        "items.thumbnail",
+        "items.variant_title",
+        "items.variant_sku",
+        "shipping_methods.name",
+        "shipping_methods.amount",
         "fulfillments.id",
         "fulfillments.shipped_at",
         "fulfillments.delivered_at",
         "fulfillments.canceled_at",
+        "fulfillments.labels.tracking_number",
+        "fulfillments.labels.tracking_url",
       ],
       filters: { id: orderIds },
     })
@@ -38,6 +49,7 @@ export async function syncResellerOrdersWithMedusa(
 
       ro.medusa_order = mo
       ro.display_id = mo.display_id
+      ro.items = mo.items || []
 
       let targetOrderStatus = ro.order_status
       let targetPayoutStatus = ro.payout_status
