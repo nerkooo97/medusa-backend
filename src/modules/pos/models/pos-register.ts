@@ -25,7 +25,7 @@ export const PosRegister = model.define("pos_register", {
   stock_location_id: model.text().nullable(), // Povezani magacin / skladište sa kojeg se skida stanje
 
   // Načini plaćanja za ovu kasu
-  supported_payment_methods: model.json().default(["cash", "card", "wire_transfer"]), // ["cash", "card", "wire_transfer", "voucher"]
+  supported_payment_methods: model.json().default(["cash", "card", "wire_transfer"] as any), // ["cash", "card", "wire_transfer", "voucher"]
   default_payment_method: model.text().default("cash"),
 
   // Fiskalni printer i hardverska konfiguracija (za BiH fiskalne printere: Tring, HCP, Tremol...)

@@ -16,10 +16,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
     const validation = await posService.validateOperator(registerId, user_id, pin_code)
 
-    if (!validation.valid) {
+    if (!validation.valid || !validation.operator) {
       return res.status(401).json({
         success: false,
-        message: validation.message,
+        message: validation.message || "Neautorizovan pristup.",
         requires_pin: validation.requires_pin || false,
       })
     }
