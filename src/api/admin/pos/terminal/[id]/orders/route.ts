@@ -2,7 +2,11 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { POS_MODULE } from "../../../../../../modules/pos"
 import PosModuleService from "../../../../../../modules/pos/service"
 import { Modules } from "@medusajs/framework/utils"
-import { createOrderWorkflow } from "@medusajs/medusa/core-flows"
+import {
+  createOrderWorkflow,
+  createOrderPaymentCollectionWorkflow,
+  completeOrderWorkflow,
+} from "@medusajs/medusa/core-flows"
 
 export const AUTHENTICATE = false
 
@@ -225,6 +229,79 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         },
       },
     })
+
+    // 7. Automatsko evidentiranje i zaključivanje uplate (Payment Status -> Captured / Plaćeno)
+    const orderTotal = Number(total_amount ?? createdMedusaOrder.total ?? 0)
+    try {
+      const { result: paymentCollections } = await createOrderPaymentCollectionWorkflow(req.scope).run({
+        input: {
+          order_id: createdMedusaOrder.id,
+          amount: orderTotal,
+        },
+      })
+
+      if (paymentCollections && paymentCollections.length > 0) {
+        const paymentCollection = paymentCollections[0]
+        const paymentModuleService = req.scope.resolve(Modules.PAYMENT) as any
+
+        // Kreiranje i autorizacija sesije
+        const session = await paymentModuleService.createPaymentSession(paymentCollection.id, {
+          provider_id: "pp_system_default",
+          currency_code: "bam",
+          amount: orderTotal,
+          data: {
+            payment_method: payment_method || "Gotovina",
+            fiscal_receipt_number: fiscal_receipt_number || undefined,
+          },
+        })
+
+        const authorized = await paymentModuleService.authorizePaymentSession(session.id, {})
+        const paymentId = authorized?.payment?.id || session.payment?.id
+
+        if (paymentId) {
+          await paymentModuleService.capturePayment({
+            payment_id: paymentId,
+            amount: orderTotal,
+          })
+        }
+
+        await paymentModuleService.completePaymentCollections(paymentCollection.id)
+      }
+    } catch (payErr) {
+      console.warn("Upozorenje: Nije uspjelo automatsko evidentiranje uplate:", payErr)
+    }
+
+    // 8. Oznaka isporuke na licu mjesta (Fulfillment Status -> Delivered / Preuzeto)
+    try {
+      const orderModuleService = req.scope.resolve(Modules.ORDER) as any
+      const [orderWithItems] = await orderModuleService.listOrders(
+        { id: createdMedusaOrder.id },
+        { select: ["id", "items.id", "items.quantity"] }
+      )
+
+      if (orderWithItems?.items?.length) {
+        await orderModuleService.registerDelivery({
+          order_id: createdMedusaOrder.id,
+          items: orderWithItems.items.map((i: any) => ({
+            id: i.id,
+            quantity: i.quantity,
+          })),
+        })
+      }
+    } catch (delivErr) {
+      console.warn("Upozorenje: Nije uspjelo automatsko označavanje isporuke:", delivErr)
+    }
+
+    // 9. Postavljanje statusa narudžbe na completed
+    try {
+      await completeOrderWorkflow(req.scope).run({
+        input: {
+          orderIds: [createdMedusaOrder.id],
+        },
+      })
+    } catch (compErr) {
+      console.warn("Upozorenje: Nije uspjelo postavljanje statusa narudžbe na completed:", compErr)
+    }
 
     res.status(200).json({
       success: true,
