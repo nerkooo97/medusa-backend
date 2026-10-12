@@ -5,9 +5,9 @@ import ResellerModuleService from "../modules/reseller/service"
 export default async function resellerOrderFulfillmentSyncHandler({
   event: { name, data },
   container,
-}: SubscriberArgs<{ order_id: string; fulfillment_id: string }>) {
+}: SubscriberArgs<{ order_id?: string; id?: string; fulfillment_id?: string }>) {
   const logger = container.resolve("logger")
-  const { order_id } = data
+  const order_id = (data as any)?.order_id || (data as any)?.id
 
   if (!order_id) return
 
@@ -22,22 +22,45 @@ export default async function resellerOrderFulfillmentSyncHandler({
 
     const resellerOrder = orders[0]
 
-    if (name === "order.fulfillment_created") {
+    if (
+      name === "order.fulfillment_delivered" ||
+      name === "fulfillment.delivered" ||
+      name === "order.completed"
+    ) {
       await resellerService.updateResellerOrders({
         id: resellerOrder.id,
-        order_status: "shipped",
+        order_status: "delivered",
+        payout_status: resellerOrder.payout_status === "paid" ? "paid" : "eligible",
       })
       logger.info(
-        `[Reseller] Narudžba ${order_id} (Preprodavač) označena kao 'shipped'.`
+        `[Reseller] Narudžba ${order_id} (Preprodavač) označena kao 'delivered' (provizija spremna za isplatu).`
       )
-    } else if (name === "order.fulfillment_canceled") {
+    } else if (
+      name === "order.fulfillment_created" ||
+      name === "fulfillment.created" ||
+      name === "fulfillment.shipment_created"
+    ) {
+      if (resellerOrder.order_status !== "delivered") {
+        await resellerService.updateResellerOrders({
+          id: resellerOrder.id,
+          order_status: "shipped",
+        })
+        logger.info(
+          `[Reseller] Narudžba ${order_id} (Preprodavač) označena kao 'shipped'.`
+        )
+      }
+    } else if (
+      name === "order.fulfillment_canceled" ||
+      name === "fulfillment.canceled" ||
+      name === "order.canceled"
+    ) {
       await resellerService.updateResellerOrders({
         id: resellerOrder.id,
         order_status: "canceled",
-        payout_status: "unearned",
+        payout_status: resellerOrder.payout_status === "paid" ? "paid" : "unearned",
       })
       logger.info(
-        `[Reseller] Otprema za narudžbu ${order_id} je poništena. Status postavljen na 'canceled'.`
+        `[Reseller] Narudžba ${order_id} stornirana. Status postavljen na 'canceled'.`
       )
     }
   } catch (err: any) {
@@ -49,5 +72,15 @@ export default async function resellerOrderFulfillmentSyncHandler({
 }
 
 export const config: SubscriberConfig = {
-  event: ["order.fulfillment_created", "order.fulfillment_canceled"],
+  event: [
+    "order.fulfillment_created",
+    "order.fulfillment_delivered",
+    "order.fulfillment_canceled",
+    "fulfillment.created",
+    "fulfillment.delivered",
+    "fulfillment.canceled",
+    "fulfillment.shipment_created",
+    "order.completed",
+    "order.canceled",
+  ],
 }

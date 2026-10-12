@@ -25,6 +25,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     }
 
     const operator = validation.operator
+    if (!operator) {
+      return res.status(401).json({ success: false, message: "Operater nije pronađen." })
+    }
     const user = await userService.retrieveUser(user_id)
     const activeSession = await posService.getActiveSession(registerId)
 
