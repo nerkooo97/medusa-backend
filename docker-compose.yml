@@ -6,8 +6,8 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-medusa-store}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-SigurnaSifra123!}
+      # OBRISANO: POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - medusa_store_data:/var/lib/postgresql/data
     healthcheck:
@@ -15,8 +15,7 @@ services:
       interval: 3s
       timeout: 3s
       retries: 10
-    ports:
-      - "5432:5432"
+    # OBRISANO: ports: - "5432:5432"
     networks:
       - medusa_network
 
@@ -24,8 +23,7 @@ services:
     image: redis:7-alpine
     container_name: medusa_redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    # OBRISANO: ports: - "6379:6379" (Redis također ne smije biti javno dostupan)
     networks:
       - medusa_network
 
@@ -42,7 +40,7 @@ services:
       - "9000:9000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/medusa-store}
+      - DATABASE_URL=${DATABASE_URL:-postgres://postgres:SigurnaSifra123!@postgres:5432/medusa-store}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379}
       - JWT_SECRET=${JWT_SECRET:-supersecret}
       - COOKIE_SECRET=${COOKIE_SECRET:-supersecret}
