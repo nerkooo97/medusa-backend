@@ -7,6 +7,7 @@ export interface CategoryConfig {
   name: string
   handle: string
   icon: string // Exact Lucide icon string name (e.g. "Drill", "Wrench", "Sparkles")
+  image?: string // 512x512px 1:1 category image URL
   description?: string
 }
 
